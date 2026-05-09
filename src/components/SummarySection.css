@@ -8,6 +8,23 @@
   gap: 24px;
 }
 
+.month-header {
+  padding: 16px 0;
+  border-bottom: 3px solid #667eea;
+  margin-bottom: 8px;
+}
+
+.month-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .summary-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;

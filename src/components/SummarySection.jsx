@@ -1,4 +1,5 @@
 import './SummarySection.css'
+import { getCurrentMonthYear } from '../lib/dateUtils'
 
 const SummarySection = ({
   totalCost,
@@ -10,6 +11,10 @@ const SummarySection = ({
 }) => {
   return (
     <section className="summary-section">
+      <div className="month-header">
+        <h2>{getCurrentMonthYear()}</h2>
+      </div>
+
       <div className="summary-card">
         <h3>Total Spending</h3>
         <p className="total-amount">₹{totalCost.toFixed(2)}</p>

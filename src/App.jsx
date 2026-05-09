@@ -3,12 +3,15 @@ import './App.css'
 import { useAuth } from './hooks/useAuth'
 import { useExpenses } from './hooks/useExpenses'
 import { useCategories } from './hooks/useCategories'
+import { filterCurrentMonthExpenses } from './lib/dateUtils'
 import Login from './components/Login'
 import AppHeader from './components/AppHeader'
 import ExpenseForm from './components/ExpenseForm'
 import ExpensesList from './components/ExpensesList'
 import SummarySection from './components/SummarySection'
 import AddCategoryModal from './components/AddCategoryModal'
+import BottomNavbar from './components/BottomNavbar'
+import StatsView from './components/StatsView'
 
 function App() {
   // Authentication
@@ -34,6 +37,7 @@ function App() {
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategorySummary, setNewCategorySummary] = useState('')
   const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [activeTab, setActiveTab] = useState('home')
 
   // Set default category when categories load
   useEffect(() => {
@@ -121,19 +125,25 @@ function App() {
     return category ? category.name : 'Unknown'
   }
 
-  // Filter expenses
+  // Get current month expenses
+  const currentMonthExpenses = filterCurrentMonthExpenses(expenses)
+
+  // Filter expenses by category from current month
   const filteredExpenses = filterCategoryId === 'All'
-    ? expenses
-    : expenses.filter(expense => expense.category_id === parseInt(filterCategoryId))
+    ? currentMonthExpenses
+    : currentMonthExpenses.filter(expense => expense.category_id === parseInt(filterCategoryId))
 
-  // Calculate total cost
+  // Calculate total cost for current month
   const totalCost = filteredExpenses.reduce((sum, expense) => sum + expense.cost, 0)
+  
+  // Calculate total for current month (for navbar)
+  const currentMonthTotal = currentMonthExpenses.reduce((sum, expense) => sum + expense.cost, 0)
 
-  // Calculate category stats
+  // Calculate category stats for current month
   const getCategoryStats = () => {
     const stats = {}
     categories.forEach(cat => {
-      stats[cat.id] = expenses
+      stats[cat.id] = currentMonthExpenses
         .filter(e => e.category_id === cat.id)
         .reduce((sum, e) => sum + e.cost, 0)
     })
@@ -164,53 +174,70 @@ function App() {
       <div className="content">
         {expensesError && <div className="alert alert-error">⚠️ {expensesError}</div>}
 
-        <ExpenseForm
-          formData={formData}
-          categories={categories}
-          categoriesLoading={categoriesLoading}
-          isSubmitting={isSubmitting}
-          submitError={submitError}
-          onFormChange={handleInputChange}
-          onAddExpense={handleAddExpense}
-          onShowAddCategory={() => setShowAddCategory(true)}
-          onErrorDismiss={() => setSubmitError(null)}
-        />
+        {activeTab === 'home' ? (
+          <>
+            <ExpenseForm
+              formData={formData}
+              categories={categories}
+              categoriesLoading={categoriesLoading}
+              isSubmitting={isSubmitting}
+              submitError={submitError}
+              onFormChange={handleInputChange}
+              onAddExpense={handleAddExpense}
+              onShowAddCategory={() => setShowAddCategory(true)}
+              onErrorDismiss={() => setSubmitError(null)}
+            />
 
-        <AddCategoryModal
-          isOpen={showAddCategory}
-          categoryName={newCategoryName}
-          categorySummary={newCategorySummary}
-          isSubmitting={isAddingCategory}
-          error={submitError}
-          onCategoryNameChange={(e) => setNewCategoryName(e.target.value)}
-          onCategorySummaryChange={(e) => setNewCategorySummary(e.target.value)}
-          onAdd={handleAddCategory}
-          onClose={() => {
-            setShowAddCategory(false)
-            setNewCategoryName('')
-            setNewCategorySummary('')
-            setSubmitError(null)
-          }}
-        />
+            <AddCategoryModal
+              isOpen={showAddCategory}
+              categoryName={newCategoryName}
+              categorySummary={newCategorySummary}
+              isSubmitting={isAddingCategory}
+              error={submitError}
+              onCategoryNameChange={(e) => setNewCategoryName(e.target.value)}
+              onCategorySummaryChange={(e) => setNewCategorySummary(e.target.value)}
+              onAdd={handleAddCategory}
+              onClose={() => {
+                setShowAddCategory(false)
+                setNewCategoryName('')
+                setNewCategorySummary('')
+                setSubmitError(null)
+              }}
+            />
 
-        <div className="main-grid">
-          <SummarySection
-            totalCost={totalCost}
+            <div className="main-grid">
+              <SummarySection
+                totalCost={totalCost}
+                categories={categories}
+                categoriesLoading={categoriesLoading}
+                categoryStats={categoryStats}
+                filterCategoryId={filterCategoryId}
+                onFilterChange={setFilterCategoryId}
+              />
+
+              <ExpensesList
+                expenses={filteredExpenses}
+                loading={expensesLoading}
+                getCategoryName={getCategoryName}
+                onDeleteExpense={handleDeleteExpense}
+              />
+            </div>
+          </>
+        ) : (
+          <StatsView
+            expenses={expenses}
             categories={categories}
-            categoriesLoading={categoriesLoading}
-            categoryStats={categoryStats}
-            filterCategoryId={filterCategoryId}
-            onFilterChange={setFilterCategoryId}
-          />
-
-          <ExpensesList
-            expenses={filteredExpenses}
             loading={expensesLoading}
             getCategoryName={getCategoryName}
-            onDeleteExpense={handleDeleteExpense}
           />
-        </div>
+        )}
       </div>
+
+      <BottomNavbar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        monthlyTotal={currentMonthTotal}
+      />
     </div>
   )
 }

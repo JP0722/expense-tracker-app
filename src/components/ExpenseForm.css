@@ -67,7 +67,7 @@
   border-radius: 6px;
   font-size: 18px;
   font-weight: bold;
-  color: #667eea;
+  /* color: #667eea; */
   cursor: pointer;
   transition: all 0.3s ease;
   min-width: 44px;
